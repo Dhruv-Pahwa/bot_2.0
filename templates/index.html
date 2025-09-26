@@ -1,92 +1,368 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>MindCare Chatbot</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDI Recovery Chatbot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f7f7;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        #chat-container {
+            width: 100%;
+            max-width: 768px;
+            height: 85vh;
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        #chat-messages {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background-color: #fcfcfc;
+        }
+        .message {
+            max-width: 80%;
+            padding: 10px 15px;
+            border-radius: 12px;
+            word-wrap: break-word;
+            line-height: 1.6;
+        }
+        .user-message {
+            align-self: flex-end;
+            background-color: #10b981; /* Emerald 500 */
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .bot-message {
+            align-self: flex-start;
+            background-color: #e5e7eb; /* Gray 200 */
+            color: #1f2937;
+            border-bottom-left-radius: 4px;
+        }
+        .message strong {
+            font-weight: 600;
+            color: #059669; /* Darker green for emphasis */
+        }
+        .message-input {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .menu-button {
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px #047857;
+        }
+        .menu-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px #047857;
+        }
+        .menu-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px #047857;
+        }
+        /* Custom formatting for assessment analysis */
+        .bot-message h3 {
+            font-size: 1.15rem;
+            font-weight: bold;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            color: #065f46;
+        }
+        .bot-message * {
+            margin: 0;
+            padding: 0;
+        }
+        .bot-message p, .bot-message ul {
+            margin-top: 5px;
+            margin-bottom: 5px;
+            padding-left: 20px;
+        }
+        .bot-message li {
+            margin-bottom: 5px;
+        }
+
+    </style>
 </head>
-<body class="bg-gradient-to-r from-blue-50 to-teal-50 min-h-screen flex flex-col items-center justify-center font-sans">
-  
-  <!-- Header -->
-  <div class="w-full max-w-lg text-center mb-4">
-    <h1 class="text-3xl font-bold text-blue-700">💬 Resolve Chatbot</h1>
-    <p class="text-gray-600 text-sm">Your AI companion for supportive conversations</p>
-  </div>
+<body>
 
-  <!-- Chat Container -->
-  <div class="bg-white shadow-xl rounded-2xl w-full max-w-lg flex flex-col h-[75vh] border border-blue-100">
-    
-    <!-- Messages -->
-    <div id="chatbox" class="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-blue-200">
-      <!-- Messages injected here -->
+    <div id="chat-container">
+        <header class="p-4 bg-emerald-600 text-white shadow-lg">
+            <h1 class="text-xl font-bold">Resolve Assistant</h1>
+            <p class="text-sm opacity-80">Your compassionate guide to recovery.</p>
+        </header>
+
+        <div id="chat-messages">
+            <div class="bot-message">
+                Hello! I'm here to support you on your journey. Please choose one of the options below to get started, or simply type your message.
+            </div>
+
+            <div id="initial-menu" class="w-full flex flex-col gap-3 p-4 bg-white rounded-lg shadow-inner border border-gray-100">
+                <button onclick="handleMenuSelection('SHARE_PROGRESS')" class="menu-button bg-sky-500 text-white font-semibold py-3 px-4 rounded-xl shadow-sky-700/50">
+                    🗣️ Want to share something
+                </button>
+                <button onclick="handleMenuSelection('START_PDI_ASSESSMENT')" class="menu-button bg-emerald-500 text-white font-semibold py-3 px-4 rounded-xl">
+                    🧠 Need analysis of your current situation
+                </button>
+                <button onclick="handleMenuSelection('FEELING_URGES')" class="menu-button bg-rose-500 text-white font-semibold py-3 px-4 rounded-xl shadow-rose-700/50">
+                    🚨 Having strong urges talk with me
+                </button>
+            </div>
+        </div>
+
+        <div class="message-input">
+            <input type="text" id="user-input" placeholder="Type your message here..."
+                    class="flex-grow p-3 border border-gray-300 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            <button onclick="sendMessage()" id="send-button"
+                    class="bg-emerald-600 text-white p-3 rounded-r-xl font-semibold hover:bg-emerald-700 transition duration-150">
+                Send
+            </button>
+        </div>
     </div>
 
-    <!-- Input -->
-    <div class="p-3 border-t flex items-center bg-blue-50 rounded-b-2xl">
-      <textarea id="userInput"
-             placeholder="Type your thoughts..."
-             rows="1"
-             class="flex-1 border border-gray-300 rounded-lg p-2 resize-none focus:ring-2 focus:ring-blue-400 outline-none"></textarea>
-      <button onclick="sendMessage()"
-              class="ml-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 shadow">
-        Send
-      </button>
-    </div>
-  </div>
+    <script>
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const initialMenu = document.getElementById('initial-menu');
+        const sendButton = document.getElementById('send-button');
 
-  <!-- Disclaimer -->
-  <p class="text-xs text-gray-500 mt-3 max-w-lg text-center">
-    ⚠️ This chatbot is for supportive conversations only. It is <strong>not a substitute</strong> for professional medical or psychological advice.
-  </p>
+        // --- PDI ASSESSMENT STATE AND DATA ---
+        let currentPdiStep = -1; // -1: Inactive, 0-7: Question Index, 8: Complete
+        let pdiScores = [];
+        
+        const pdiQuestions = [
+            "How often have you felt in control of your urges in the last week? (1=Not at all, 5=Completely)",
+            "How motivated are you to stick to your recovery plan today? (1=Not at all, 5=Extremely)",
+            "How much stress have you experienced today? (1=Low stress, 5=High stress)",
+            "How would you rate your mood today? (1=Very low, 5=Very high)",
+            "On a scale of 1 to 5, how clear is your mind right now? (1=Very foggy, 5=Crystal clear)",
+            "How satisfied are you with your support system right now? (1=Not at all, 5=Very satisfied)",
+            "How well did you sleep last night? (1=Very poorly, 5=Very well)",
+            "How tempted were you to engage in old patterns today? (1=Not at all, 5=Extremely tempted)"
+        ];
 
-  <script>
-    async function sendMessage() {
-      const input = document.getElementById("userInput");
-      const chatbox = document.getElementById("chatbox");
-      const userText = input.value.trim();
-      if (!userText) return;
+        // --- UTILITY FUNCTIONS ---
+        userInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
 
-      // Append user message
-      chatbox.innerHTML += `
-        <div class="flex justify-end">
-          <div class="bg-blue-500 text-white px-4 py-2 rounded-2xl shadow max-w-[70%] whitespace-pre-wrap">${userText}</div>
-        </div>`;
-      input.value = "";
-      chatbox.scrollTop = chatbox.scrollHeight;
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
 
-      // Typing indicator
-      const typingEl = document.createElement("div");
-      typingEl.className = "flex justify-start";
-      typingEl.innerHTML = `<div class="bg-gray-200 text-gray-700 px-4 py-2 rounded-2xl shadow animate-pulse">...</div>`;
-      chatbox.appendChild(typingEl);
-      chatbox.scrollTop = chatbox.scrollHeight;
+        function appendMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', sender === 'user' ? 'user-message' : 'bot-message');
+            // Use innerHTML to render formatted text (e.g., for the PDI analysis)
+            messageDiv.innerHTML = text.replace(/\n/g, '<br>'); 
+            chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+        }
 
-      // Send to backend
-      const response = await fetch("/chat", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({message: userText})
-      });
-      const data = await response.json();
+        function enableInput() {
+            userInput.disabled = false;
+            sendButton.disabled = false;
+            userInput.focus();
+        }
 
-      // Remove typing indicator
-      chatbox.removeChild(typingEl);
+        function disableInput() {
+            userInput.disabled = true;
+            sendButton.disabled = true;
+        }
 
-      // Append bot reply
-      chatbox.innerHTML += `
-        <div class="flex justify-start">
-          <div class="bg-gray-200 text-gray-700 px-4 py-2 rounded-2xl shadow max-w-[70%] whitespace-pre-wrap">${data.response}</div>
-        </div>`;
-      chatbox.scrollTop = chatbox.scrollHeight;
-    }
+        // --- PDI ASSESSMENT FUNCTIONS ---
 
-    // Enter = send, Shift+Enter = newline
-    document.getElementById("userInput").addEventListener("keydown", function (e) {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault(); // prevent newline
-        sendMessage();
-      }
-    });
-  </script>
+        function startPdiAssessment() {
+            currentPdiStep = 0;
+            pdiScores = [];
+            
+            const intro = `Great! Let's analyze your current situation with a quick **8-question assessment**. Please answer each question with a number from **1 to 5**.`;
+            appendMessage(intro, 'bot');
+            
+            // Ask the first question
+            setTimeout(() => {
+                appendMessage(`**Question 1/8:** ${pdiQuestions[currentPdiStep]}`, 'bot');
+                enableInput();
+            }, 500);
+        }
+
+        function processPdiResponse(message) {
+            const score = parseInt(message);
+
+            if (isNaN(score) || score < 1 || score > 5) {
+                appendMessage("That's not a valid score. Please enter a number from **1 to 5** for the current question.", 'bot');
+                enableInput();
+                return;
+            }
+
+            pdiScores.push(score);
+
+            if (currentPdiStep < pdiQuestions.length - 1) {
+                // Advance to next question
+                currentPdiStep++;
+                appendMessage(`**Question ${currentPdiStep + 1}/8:** ${pdiQuestions[currentPdiStep]}`, 'bot');
+                enableInput();
+            } else {
+                // Assessment complete
+                currentPdiStep = -1; // Reset state
+                generatePdiAnalysis();
+            }
+        }
+        
+        function generatePdiAnalysis() {
+            const totalScore = pdiScores.reduce((a, b) => a + b, 0);
+            const maxScore = pdiQuestions.length * 5; // 8 * 5 = 40
+            
+            let analysisHeader = "";
+            let summary = "";
+            let recommendation = "";
+            
+            // NOTE: The interpretation of scores for recovery is often inverse for some questions.
+            // For simplicity, we'll assume a high total score (out of 40) is generally better for the *first 7 questions* (where 5 is good).
+            // Q8 (temptation) is an exception, but for the aggregate, we'll keep the simple sum for this demo.
+            
+            if (totalScore >= 32) { // 80% or higher
+                analysisHeader = "Your Current State: **Strong & Stable!** 💪";
+                summary = `You've demonstrated **excellent resilience and stability** across key recovery areas, scoring a total of **${totalScore} out of ${maxScore}**. Your control, motivation, and support systems appear to be very strong. This is a fantastic sign of progress!`;
+                recommendation = `
+                    <h3>Next Steps: Sustain & Grow 🌱</h3>
+                    <ul>
+                        <li>**Celebrate your success!** Acknowledge the hard work that got you here.</li>
+                        <li>**Proactive Maintenance:** Don't get complacent. Focus on maintaining your routines and connections.</li>
+                        <li>**Challenge Yourself:** Think about setting a new, positive, non-recovery-related goal (e.g., a hobby, a fitness goal).</li>
+                    </ul>
+                `;
+            } else if (totalScore >= 24) { // 60% to 79%
+                analysisHeader = "Your Current State: **Steady Progress** 👍";
+                summary = `You're in a solid position, scoring **${totalScore} out of ${maxScore}**. While many areas are stable, there might be a few weak spots (like stress, sleep, or a specific urge) that require attention. You're doing well, but consistency is key.`;
+                recommendation = `
+                    <h3>Next Steps: Focus & Consistency 🔍</h3>
+                    <ul>
+                        <li>**Identify Hot Spots:** Review your individual scores (especially those that were 1s or 2s) and brainstorm specific actions to address them.</li>
+                        <li>**Reinforce Coping Skills:** Practice a grounding or relaxation technique for at least 5 minutes daily.</li>
+                        <li>**Reach Out:** Connect with your sponsor, therapist, or support group member this week.</li>
+                    </ul>
+                `;
+            } else { // Below 60%
+                analysisHeader = "Your Current State: **High Risk, Immediate Focus Needed** ⚠️";
+                summary = `Your total score is **${totalScore} out of ${maxScore}**. This indicates several areas of vulnerability, with low control, high stress/temptation, or poor support/sleep. It's crucial to acknowledge this and **prioritize your recovery right now**.`;
+                recommendation = `
+                    <h3>Next Steps: Stabilize & Seek Support 🆘</h3>
+                    <ul>
+                        <li>**Safety First:** Immediately implement your relapse prevention plan.</li>
+                        <li>**Connect:** Talk to a trusted person (sponsor, therapist, friend) *now*. Don't wait.</li>
+                        <li>**Reduce Stressors:** Cancel non-essential activities for the next 24 hours to focus on self-care and stability.</li>
+                    </ul>
+                `;
+            }
+
+            // Construct the final bot response
+            const finalResponse = `
+                <h2>PDI Assessment Complete</h2>
+                <p>${analysisHeader}</p>
+                <hr style="margin: 10px 0; border: 0; border-top: 1px solid #ccc;">
+                
+                <h3>Summary of Results</h3>
+                <p>${summary}</p>
+                
+                ${recommendation}
+
+                <hr style="margin: 10px 0; border: 0; border-top: 1px solid #ccc;">
+                <p>What would you like to do next? You can ask me to elaborate on one of the recommendations or choose an option from the menu.</p>
+            `;
+
+            appendMessage(finalResponse, 'bot');
+            initialMenu.style.display = 'flex'; // Show the menu again
+            enableInput();
+        }
+
+        // --- CHAT INTERFACE FUNCTIONS ---
+
+        // Function to handle the menu button clicks
+        function handleMenuSelection(command) {
+            disableInput();
+            
+            let displayMessage = '';
+            
+            if (command === 'START_PDI_ASSESSMENT') {
+                displayMessage = 'I need analysis of my current situation.';
+                appendMessage(displayMessage, 'user');
+                initialMenu.style.display = 'none';
+                startPdiAssessment();
+                return; // Stop here, as the flow is handled by startPdiAssessment
+            } else if (command === 'SHARE_PROGRESS') {
+                displayMessage = 'I want to share something.';
+            } else if (command === 'FEELING_URGES') {
+                displayMessage = 'I am having strong urges and want to talk.';
+            }
+
+            // Display the user's choice
+            appendMessage(displayMessage, 'user');
+            
+            // Simulate the backend response for the other two options
+            if (command === 'SHARE_PROGRESS') {
+                setTimeout(() => {
+                    appendMessage("That's wonderful! I'd love to hear about it. Tell me what's been going well for you.", 'bot');
+                    enableInput();
+                    initialMenu.style.display = 'none';
+                }, 500);
+            } else if (command === 'FEELING_URGES') {
+                setTimeout(() => {
+                    appendMessage("Thank you for reaching out. That takes courage. Remember the 'HALT' check: Are you **H**ungry, **A**ngry, **L**onely, or **T**ired? Tell me which one you are feeling most right now, and we'll work through it.", 'bot');
+                    enableInput();
+                    initialMenu.style.display = 'none';
+                }, 500);
+            }
+        }
+
+        // Function to send a message
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (message === '') return;
+
+            // Clear input and display user message
+            userInput.value = '';
+            appendMessage(message, 'user');
+            
+            disableInput();
+
+            // --- MAIN LOGIC FLOW ---
+            if (currentPdiStep >= 0 && currentPdiStep < pdiQuestions.length) {
+                // If an assessment is active, process the score
+                setTimeout(() => {
+                    processPdiResponse(message);
+                }, 500);
+            } else {
+                // General conversation (simulated)
+                setTimeout(() => {
+                    appendMessage(`Thank you for sharing: "${message}". That's a great topic. How does that connect to your overall recovery goals? (Since this is a simulated chat, I'm returning to the menu.)`, 'bot');
+                    initialMenu.style.display = 'flex';
+                    enableInput();
+                }, 1000);
+            }
+        }
+        
+        // Initial setup on load to ensure input is ready
+        window.onload = () => {
+             userInput.focus();
+        };
+
+    </script>
 </body>
 </html>
